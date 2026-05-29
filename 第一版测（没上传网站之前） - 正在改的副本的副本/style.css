@@ -1,0 +1,847 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lanapixel&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    width:100vw;
+    height:100vh;
+
+    overflow:hidden;
+
+    background:#000;
+
+    font-family:
+    "Microsoft YaHei",
+    sans-serif;
+
+    color:white;
+
+    position:relative;
+}
+
+/* 梦核背景 */
+
+#background{
+
+    position:fixed;
+    inset:0;
+
+    background-size:cover;
+    background-position:center;
+
+    filter:
+    blur(0px)
+    brightness(0.95)
+    saturate(1.05);
+
+    transform:scale(1.08);
+
+    transition:1.2s;
+}
+
+/* VHS噪点 */
+
+#background::after{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background-image:
+    repeating-linear-gradient(
+    to bottom,
+    rgba(109, 156, 226, 0.03) 0px,
+    rgba(104, 135, 194, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+    );
+
+    opacity:0.25;
+
+    pointer-events:none;
+}
+
+/* 梦核白雾 */
+
+#overlay{
+
+    position:fixed;
+    inset:0;
+
+    background:
+    radial-gradient(
+    circle at center,
+    rgba(255,255,255,0.04),
+    rgba(0,0,0,0.32)
+    );
+
+    backdrop-filter:none;
+
+    z-index:1;
+}
+
+/* 主区域 */
+
+#game-container{
+
+    position:relative;
+
+    z-index:2;
+
+    width:100%;
+    height:100vh;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    16px
+    max(16px, env(safe-area-inset-bottom, 0px))
+    16px;
+
+    pointer-events:none;
+
+    transition:padding 0.25s ease;
+}
+
+/* 有选项时为底部按钮留出空间 */
+
+body.has-choices #game-container{
+
+    filter:
+    contrast(0.95)
+    brightness(0.92);
+
+    box-shadow:
+    0 0 40px rgba(255,255,255,0.06);
+
+    transition:1s;
+}
+
+/* 文本区域（屏幕正中，尽量大） */
+
+#story-area{
+
+    width:100%;
+    max-width:min(92vw, 680px);
+    max-height:min(68vh, 620px);
+    min-height:min(40vh, 360px);
+
+    overflow-y:auto;
+    overflow-x:hidden;
+    pointer-events:auto;
+
+    background:
+    rgba(0,0,0,0.12);
+
+    backdrop-filter:blur(2px);
+
+    scroll-behavior:smooth;
+    -webkit-overflow-scrolling:touch;
+}
+
+/* 滚动条 */
+
+#story-area{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+
+#story-area::-webkit-scrollbar{
+    width:8px;
+}
+
+#story-area::-webkit-scrollbar-track{
+    background: rgba(255,255,255,0.06);
+    border-radius:999px;
+}
+
+#story-area::-webkit-scrollbar-thumb{
+    background: rgba(255,255,255,0.18);
+    border-radius:999px;
+    border:2px solid transparent;
+    background-clip: content-box;
+}
+
+#story-area::-webkit-scrollbar-thumb:hover{
+    background: rgba(255,255,255,0.28);
+}
+
+/* 仅展示文本、无选项时：整页可点 */
+
+body:not(.has-choices){
+    cursor:pointer;
+}
+
+/* 名字 */
+
+#speaker{
+
+    flex-shrink:0;
+
+    font-size:15px;
+
+    letter-spacing:3px;
+
+    color:#ffdced;
+
+    margin-bottom:8px;
+
+    opacity:0.9;
+
+    text-shadow:
+    0 1px 8px rgba(0,0,0,0.85);
+}
+
+/* 剧情文字 */
+
+#story-text{
+
+    flex:1;
+
+    min-height:0;
+
+    overflow:hidden;
+
+    font-size:16px;
+
+    line-height:1.95;
+
+    white-space:pre-wrap;
+
+    color:rgba(255,255,255,0.95);
+    font-family: 'IBM Plex Mono', monospace;
+
+    text-shadow:
+    0 1px 4px rgba(0,0,0,0.9),
+    0 0 20px rgba(0,0,0,0.5);
+
+    animation:textFade 1s ease;
+}
+
+/* 作者 */
+
+#author{
+
+    position:absolute;
+
+    right:20px;
+    bottom:10px;
+
+    margin:0;
+
+    text-align:right;
+
+    font-size:11px;
+
+    letter-spacing:2px;
+
+    opacity:0.45;
+
+    pointer-events:none;
+
+    text-shadow:0 1px 6px rgba(0,0,0,0.8);
+}
+
+/* 选项区 */
+
+#choices{
+
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:12px;
+
+    padding:
+    12px
+    16px
+    calc(12px + env(safe-area-inset-bottom, 0px))
+    16px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:12px;
+
+    z-index:5;
+
+    background: rgba(0,0,0,0.18);
+
+    border:2px solid rgba(248,185,216,0.28);
+    border-radius:2px;
+
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.35);
+
+    backdrop-filter: blur(6px);
+
+    pointer-events:auto;
+}
+
+/* 无选项时不挡住全屏点击 */
+
+#choices:empty{
+
+    pointer-events:none;
+    background:transparent;
+    padding:0;
+}
+
+/* 选项按钮 */
+
+.choice-btn{
+
+    border:2px solid rgba(248,185,216,0.36);
+
+    padding:18px 20px;
+
+    color:white;
+
+    font-size:16px;
+
+    letter-spacing:2px;
+
+    font-family: "Courier New", "MS Gothic", monospace;
+
+    background:rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+
+    border-radius:2px;
+
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 6px 14px rgba(0,0,0,0.32), 0 0 14px rgba(255,179,217,0.18);
+
+    transition:0.25s;
+
+    text-align:left;
+}
+
+.choice-btn:hover{
+
+    background:rgba(255,220,240,0.22);
+    border-color:#f8b9d8;
+    box-shadow:0 4px 16px rgba(0,0,0,0.35), 0 0 24px rgba(255,179,217,0.35);
+    transform:translateY(-2px);
+}
+
+.choice-btn:active{
+
+    transform:scale(0.98);
+    opacity:0.85;
+}
+
+@keyframes textFade{
+
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* 手机竖屏：文本框居中 */
+
+@media(max-width:768px){
+
+    #game-container{
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    body.has-choices #game-container{
+        padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #story-area{
+        max-width:94vw;
+        max-height:min(62vh, 540px);
+        min-height:min(38vh, 320px);
+        padding:16px 14px 28px;
+    }
+
+    #story-text{
+        font-size:15px;
+        line-height:1.88;
+    }
+
+    /* Home title on mobile: slightly larger and vertically centered */
+    body.scene-home #story-text{
+        font-size:20px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        min-height:140px;
+    }
+
+    #speaker{
+        font-size:14px;
+    }
+
+    .choice-btn{
+        font-size:14px;
+        padding:16px 16px;
+    }
+
+    #choices{
+        padding-left:14px;
+        padding-right:14px;
+        gap:8px;
+    }
+}
+
+/* 横屏 */
+
+@media(max-height:500px) and (orientation:landscape){
+
+    #game-container{
+        padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #story-area{
+        max-height:42vh;
+    }
+}
+
+/* ======================
+   首页梦核 UI（仅 scene-home）
+   ====================== */
+
+#home-fx{
+    position:fixed;
+    inset:0;
+    z-index:3;
+    pointer-events:none;
+    overflow:hidden;
+}
+
+#home-fx[hidden]{
+    display:none !important;
+}
+
+/* 首页背景：轻微梦核滤镜（不改变素材，只叠视觉效果） */
+
+body.scene-home #background{
+    filter:
+    saturate(1.08)
+    contrast(1.04)
+    brightness(0.92);
+    transform:scale(1.03);
+    transition:
+    filter 1.2s ease,
+    transform 1.2s ease;
+}
+
+body.scene-home #overlay{
+    background:
+    radial-gradient(
+    ellipse 90% 70% at 50% 42%,
+    rgba(255,210,235,0.12) 0%,
+    rgba(180,210,255,0.06) 35%,
+    rgba(0,0,0,0.35) 100%
+    );
+}
+
+/* 胶片颗粒 */
+
+.home-grain{
+    position:absolute;
+    inset:0;
+    opacity:0.2;
+    background-image:
+    repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.02) 0px,
+    rgba(255,255,255,0.02) 1px,
+    transparent 1px,
+    transparent 2px
+    ),
+    repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,0.025) 0px,
+    rgba(255,255,255,0.025) 1px,
+    transparent 1px,
+    transparent 3px
+    );
+    animation:homeGrainFlicker 3s steps(3) infinite;
+}
+
+/* 扫描线 */
+
+.home-scanlines{
+    position:absolute;
+    inset:0;
+    opacity:0.14;
+    background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.32) 2px,
+    rgba(0,0,0,0.32) 4px
+    );
+}
+
+/* 粉蓝漏光 */
+
+.home-bloom{
+    position:absolute;
+    inset:-15%;
+    background:
+    radial-gradient(
+    circle at 12% 18%,
+    rgba(255,175,215,0.28) 0%,
+    transparent 45%
+    ),
+    radial-gradient(
+    circle at 88% 78%,
+    rgba(165,205,255,0.22) 0%,
+    transparent 40%
+    ),
+    radial-gradient(
+    circle at 50% 50%,
+    rgba(255,255,255,0.04) 0%,
+    transparent 55%
+    );
+    animation:homeBloomDrift 9s ease-in-out infinite alternate;
+}
+
+/* 漂浮光斑 */
+
+.home-orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(1px);
+    animation:homeOrbFloat 7s ease-in-out infinite;
+}
+
+.home-orb--a{
+    width:120px;
+    height:120px;
+    top:16%;
+    left:8%;
+    background:radial-gradient(circle, rgba(255,190,225,0.35) 0%, transparent 70%);
+    animation-delay:0s;
+}
+
+.home-orb--b{
+    width:80px;
+    height:80px;
+    top:55%;
+    right:10%;
+    background:radial-gradient(circle, rgba(180,215,255,0.3) 0%, transparent 70%);
+    animation-delay:2s;
+}
+
+.home-orb--c{
+    width:50px;
+    height:50px;
+    bottom:22%;
+    left:22%;
+    background:radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+    animation-delay:4s;
+}
+
+/* 四角 HUD 标签 */
+
+.home-tag{
+    position:absolute;
+    font-size:10px;
+    letter-spacing:2px;
+    color:rgba(255,235,245,0.62);
+    text-shadow:0 0 10px rgba(255,180,220,0.35);
+    padding:4px 8px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.12);
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+}
+
+.home-tag--tl{
+    top:max(12px, env(safe-area-inset-top, 0px));
+    left:12px;
+}
+
+.home-tag--tr{
+    top:max(12px, env(safe-area-inset-top, 0px));
+    right:12px;
+}
+
+.home-tag--bl{
+    bottom:max(100px, calc(88px + env(safe-area-inset-bottom, 0px)));
+    left:12px;
+    display:none;
+}
+
+.home-tag--br{
+    bottom:max(100px, calc(88px + env(safe-area-inset-bottom, 0px)));
+    right:12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:rgba(255,150,175,0.85);
+}
+
+.home-rec-dot{
+    display:inline-block;
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#ff6b8a;
+    box-shadow:0 0 8px rgba(255,100,140,0.8);
+    animation:homeRecBlink 1.2s step-end infinite;
+}
+
+/* 画面四角框线 */
+
+.home-corner{
+    position:absolute;
+    width:28px;
+    height:28px;
+    border:1px solid rgba(255,220,240,0.35);
+    opacity:0.75;
+}
+
+.home-corner--tl{
+    top:max(36px, calc(24px + env(safe-area-inset-top, 0px)));
+    left:12px;
+    border-width:1px 0 0 1px;
+}
+
+.home-corner--tr{
+    top:max(36px, calc(24px + env(safe-area-inset-top, 0px)));
+    right:12px;
+    border-width:1px 1px 0 0;
+}
+
+.home-corner--bl{
+    bottom:max(118px, calc(100px + env(safe-area-inset-bottom, 0px)));
+    left:12px;
+    border-width:0 0 1px 1px;
+}
+
+.home-corner--br{
+    bottom:max(118px, calc(100px + env(safe-area-inset-bottom, 0px)));
+    right:12px;
+    border-width:0 1px 1px 0;
+}
+
+/* 首页文本框：梦核玻璃框 */
+
+body.scene-home #story-area{
+    max-width:min(88vw, 560px);
+    max-height:min(52vh, 420px);
+    min-height:auto;
+
+    padding:28px 24px 36px;
+
+    background:
+    linear-gradient(
+    145deg,
+    rgba(255,255,255,0.1) 0%,
+    rgba(255,220,240,0.06) 50%,
+    rgba(180,210,255,0.05) 100%
+    );
+
+    border:1px solid rgba(255,255,255,0.22);
+    border-radius:2px;
+
+    backdrop-filter:blur(12px) saturate(1.2);
+    -webkit-backdrop-filter:blur(12px) saturate(1.2);
+
+    box-shadow:
+    0 0 0 1px rgba(255,200,230,0.12),
+    0 8px 32px rgba(0,0,0,0.45),
+    0 0 60px rgba(255,180,220,0.12),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+    animation:homePanelFloat 5s ease-in-out infinite;
+}
+
+body.scene-home #story-area::before,
+body.scene-home #story-area::after{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    border-color:rgba(255,220,240,0.06);
+    border-style:solid;
+    background: transparent;
+    pointer-events:none;
+}
+
+body.scene-home #story-area::before{
+    top:10px;
+    left:10px;
+    border-width:1px 0 0 1px;
+}
+
+body.scene-home #story-area::after{
+    bottom:10px;
+    right:10px;
+    border-width:0 1px 1px 0;
+}
+
+/* 首页标题文字 */
+
+body.scene-home #story-text{
+    text-align:center;
+    font-size:32px;
+    line-height:2.4;
+    letter-spacing:2px;
+
+    color:rgba(255,248,252,0.96);
+
+    text-shadow:
+    0 0 20px rgba(255,179,217,0.35),
+    0 0 40px rgba(255,179,217,0.2),
+    0 2px 8px rgba(0,0,0,0.45);
+
+    animation:homeTextGlow 4s ease-in-out infinite alternate;
+    font-family: 'Lanapixel', monospace;
+}
+body.scene-home #author{
+    opacity:0.55;
+    letter-spacing:3px;
+    font-size:10px;
+    color:rgba(255,220,240,0.7);
+}
+
+/* 首页「开始」按钮 */
+
+body.scene-home #choices{
+    background:
+    linear-gradient(
+    to top,
+    rgba(0,0,0,0.75) 0%,
+    rgba(255,180,220,0.06) 40%,
+    transparent 100%
+    );
+    border:none;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+    backdrop-filter:none;
+}
+
+body.scene-home .choice-btn{
+    text-align:center;
+    letter-spacing:4px;
+
+    background: transparent;
+
+    border:2px solid rgba(248,185,216,0.32);
+    border-radius:2px;
+
+    box-shadow:
+    0 0 24px rgba(255,179,217,0.15),
+    inset 0 0 16px rgba(255,255,255,0.02);
+
+    animation:homeBtnPulse 2.8s ease-in-out infinite;
+}
+
+body.scene-home .choice-btn:hover{
+    background:
+    linear-gradient(
+    135deg,
+    rgba(255,220,240,0.32) 0%,
+    rgba(180,210,255,0.22) 100%
+    );
+
+    border-color:#f8b9d8;
+
+    box-shadow:
+    0 0 32px rgba(255,179,217,0.25),
+    inset 0 0 20px rgba(255,255,255,0.1),
+    0 0 24px rgba(255,179,217,0.35);
+}
+
+@keyframes homeGrainFlicker{
+    0%, 100%{ opacity:0.16; }
+    50%{ opacity:0.24; }
+}
+
+@keyframes homeBloomDrift{
+    from{ transform:translate(0, 0) scale(1); }
+    to{ transform:translate(1.5%, -1%) scale(1.05); }
+}
+
+@keyframes homeOrbFloat{
+    0%, 100%{ transform:translateY(0) scale(1); opacity:0.55; }
+    50%{ transform:translateY(-10px) scale(1.06); opacity:0.85; }
+}
+
+@keyframes homeRecBlink{
+    0%, 100%{ opacity:1; }
+    50%{ opacity:0.15; }
+}
+
+@keyframes homePanelFloat{
+    0%, 100%{ transform:translateY(0); }
+    50%{ transform:translateY(-4px); }
+}
+
+@keyframes homeTextGlow{
+    from{
+        text-shadow:
+        0 0 10px rgba(255,200,230,0.35),
+        0 1px 6px rgba(0,0,0,0.85);
+    }
+    to{
+        text-shadow:
+        0 0 18px rgba(255,200,230,0.55),
+        0 0 30px rgba(180,210,255,0.25),
+        0 1px 6px rgba(0,0,0,0.85);
+    }
+}
+
+@keyframes homeBtnPulse{
+    0%, 100%{
+        box-shadow:
+        0 0 20px rgba(255,180,220,0.18),
+        inset 0 0 14px rgba(255,255,255,0.05);
+    }
+    50%{
+        box-shadow:
+        0 0 28px rgba(255,180,220,0.32),
+        inset 0 0 18px rgba(255,255,255,0.08);
+    }
+}
+
+@media(max-width:768px){
+
+    body.scene-home #story-area{
+        padding:22px 18px 30px;
+    }
+
+    body.scene-home #story-text{
+        font-size:15px;
+        line-height:2;
+    }
+
+    .home-tag{
+        font-size:9px;
+        padding:3px 6px;
+    }
+
+    .home-orb--a{
+        width:90px;
+        height:90px;
+    }
+
+    .home-orb--b{
+        width:60px;
+        height:60px;
+    }
+}
